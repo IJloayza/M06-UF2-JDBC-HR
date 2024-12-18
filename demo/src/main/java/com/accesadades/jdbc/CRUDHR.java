@@ -13,8 +13,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class CRUDHR {
-    
-    public boolean CreateDatabase(Connection connection, InputStream input) 
+    private Connection connection;
+
+    public CRUDHR(Connection conn){
+        connection = conn;
+    }
+
+    public boolean CreateDatabase(InputStream input) 
     throws IOException, ConnectException, SQLException {
 
         boolean dupRecord = false;
@@ -58,13 +63,11 @@ public class CRUDHR {
         return dupRecord;
     }
 
-    public void InsertEmployee(Connection connection, String TableName, Employees employee) 
+    public void InsertTrain(String TableName, Train train) 
     throws ConnectException, SQLException {
 
         String query = "INSERT INTO " + TableName 
-                    + " (EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, PHONE_INT, HIRE_DATE,"
-                    + "JOB_ID, SALARY, COMMISSION_PCT, MANAGER_ID, DEPARTMENT_ID, BONUS)"
-                    + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+                    + " (id, Name, Capacity VALUES (?,?,?)";
 
 //recuperem valor inicial de l'autocommit
         boolean autocommitvalue = connection.getAutoCommit();
@@ -74,25 +77,16 @@ public class CRUDHR {
 
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
-            prepstat.setInt(1, employee.getEmployeeId());
-            prepstat.setString(2, employee.getFirstName());
-            prepstat.setString(3, employee.getLastName());
-            prepstat.setString(4, employee.getEmail());
-            prepstat.setString(5, employee.getPhoneInt());
-            prepstat.setString(6, employee.getHireDate());
-            prepstat.setString(7, employee.getJobId());
-            prepstat.setFloat(8, employee.getSalary());
-            prepstat.setFloat(9, employee.getCommissionPct());
-            prepstat.setInt(10, employee.getManagerId());
-            prepstat.setInt(11, employee.getDepartmentId());
-            prepstat.setString(12, employee.getBonus());
+            prepstat.setInt(1, train.getTrainId());
+            prepstat.setString(2, train.getName());
+            prepstat.setInt(3, train.getCapacity());
 
             prepstat.executeUpdate();
 
 //Fem el commit
             connection.commit();
 
-            System.out.println("Empleat afegit amb èxit");
+            System.out.println("Tren afegit amb èxit");
 
 //deixem l'autocommit com estava
             connection.setAutoCommit(autocommitvalue);
@@ -110,7 +104,7 @@ public class CRUDHR {
     }
 
 //Read sense prepared statements, mostra tots els registres
-    public void ReadAllDatabase(Connection connection, String TableName) throws ConnectException, SQLException {
+    public void ReadAllTrains(String TableName) throws ConnectException, SQLException {
         try (Statement statement = connection.createStatement()) {
             
             String query = "SELECT * FROM " + TableName + ";";
@@ -131,10 +125,10 @@ public class CRUDHR {
         }
     }
 
-    public void ReadDepartamentsId(Connection connection, String TableName, int id) 
+    public void ReadTrainsId(String TableName, int id) 
     throws ConnectException, SQLException {
 
-        String query = "SELECT * FROM " + TableName + " WHERE department_id = ?";
+        String query = "SELECT * FROM " + TableName + " WHERE id = ?";
 
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
@@ -154,16 +148,14 @@ public class CRUDHR {
         }
     }
 
-    public void ReadSalaries(Connection connection, String TableName, float salMin, float salMax) 
+    public void ReadTrainLike(String TableName, String likeString) 
     throws ConnectException, SQLException {
 
-        String query = "SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, SALARY FROM " 
-                     + TableName + " WHERE salary BETWEEN ? AND ?";
+        String query = "SELECT * FROM " + TableName + " WHERE Name LIKE '%?%'";
 
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
-            prepstat.setFloat(1, salMin);
-            prepstat.setFloat(2, salMax);
+            prepstat.setString(1, likeString);
             ResultSet rset = prepstat.executeQuery();
 
             int colNum = getColumnNames(rset);
