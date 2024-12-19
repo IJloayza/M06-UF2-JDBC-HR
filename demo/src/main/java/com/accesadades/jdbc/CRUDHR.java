@@ -53,6 +53,7 @@ public class CRUDHR {
             } catch (SQLException sqle) {
                 if (!sqle.getMessage().contains("Duplicate entry")) {
                     System.err.println(sqle.getMessage());
+                    sqle.printStackTrace();
                 } else {
                     dupRecord = true;
                     br.readLine();
@@ -66,8 +67,7 @@ public class CRUDHR {
     public void InsertTrain(String TableName, Train train) 
     throws ConnectException, SQLException {
 
-        String query = "INSERT INTO " + TableName 
-                    + " (id, Name, Capacity VALUES (?,?,?)";
+        String query = "INSERT INTO " + TableName + " (id, Nombre, Capacitat) VALUES (?,?,?)";
 
 //recuperem valor inicial de l'autocommit
         boolean autocommitvalue = connection.getAutoCommit();
@@ -104,32 +104,34 @@ public class CRUDHR {
     }
 
 //Read sense prepared statements, mostra tots els registres
-    public void ReadAllTrains(String TableName) throws ConnectException, SQLException {
-        try (Statement statement = connection.createStatement()) {
-            
-            String query = "SELECT * FROM " + TableName + ";";
-
-            ResultSet rset = statement.executeQuery(query);
-            
-            //obtenim numero de columnes i nom
-            int colNum = getColumnNames(rset);
-
-            //Si el nombre de columnes és >0 procedim a llegir i mostrar els registres
-            if (colNum > 0) {
-
-                recorrerRegistres(rset,colNum);
-
+    public boolean ReadAllTrains(String TableName, int offset) throws ConnectException, SQLException {
+        String query = "SELECT * FROM " + TableName + " LIMIT 10 OFFSET ?;";
+        boolean sigue = false;
+        try (PreparedStatement prep = connection.prepareStatement(query)) {
+            prep.setInt(1, offset);
+    
+            try (ResultSet rset = prep.executeQuery()) {
+                //Mirar si hi ha mès registres
+                if (rset.isBeforeFirst()) {
+                    int colNum = getColumnNames(rset);
+    
+                    if (colNum > 0) {
+                        recorrerRegistres(rset, colNum);
+                        sigue = true;
+                    }
+                }
             }
-        } catch (SQLException sqle) {
+        }catch (SQLException sqle) {
             System.err.println(sqle.getMessage());
         }
+        return sigue;
     }
 
     public void ReadTrainsId(String TableName, int id) 
     throws ConnectException, SQLException {
 
         String query = "SELECT * FROM " + TableName + " WHERE id = ?";
-
+        
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
             prepstat.setInt(1, id);
@@ -151,11 +153,11 @@ public class CRUDHR {
     public void ReadTrainLike(String TableName, String likeString) 
     throws ConnectException, SQLException {
 
-        String query = "SELECT * FROM " + TableName + " WHERE Name LIKE '%?%'";
+        String query = "SELECT * FROM " + TableName + " WHERE Nombre LIKE ?";
 
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
-            prepstat.setString(1, likeString);
+            prepstat.setString(1,"%" + likeString + "%");
             ResultSet rset = prepstat.executeQuery();
 
             int colNum = getColumnNames(rset);
@@ -194,14 +196,18 @@ public class CRUDHR {
     }
 
     public void recorrerRegistres(ResultSet rs, int ColNum) throws SQLException {
+        if (!rs.isBeforeFirst()) {
+            System.out.println("El ResultSet está vacío.");
+            return;
+        }
 
         while(rs.next()) {
-            for(int i =0; i<ColNum; i++) {
-                if(i+1 == ColNum) {
-                    System.out.println(rs.getString(i+1));
+            for(int i = 1 ; i <= ColNum; i++) {
+                if(i == ColNum) {
+                    System.out.println(rs.getString(i));
                 } else {
             
-                System.out.print(rs.getString(i+1)+ ", ");
+                System.out.print(rs.getString(i)+ ", ");
                 }
             } 
         }

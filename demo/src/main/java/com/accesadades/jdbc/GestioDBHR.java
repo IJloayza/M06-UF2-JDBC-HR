@@ -14,7 +14,6 @@ import java.util.Properties;
 public class GestioDBHR {
 //Com veurem, aquesta booleana controla si volem sortir de l'aplicació.
     static boolean sortirapp = false;
-    static boolean DispOptions = true;
         
         public static void main(String[] args) {
 
@@ -61,7 +60,7 @@ public class GestioDBHR {
         message = "==================";
         printScreen(terminal, message);
 
-        message = "CONSULTA BD HR";
+        message = "CONSULTA BD Renfe";
         printScreen(terminal, message);
 
         message = "==================";
@@ -146,21 +145,22 @@ public class GestioDBHR {
     public static void MenuSelect(CRUDHR crudbhr,Connection connection) 
     throws SQLException, NumberFormatException, IOException {
         //Mostrar totes les dades de TRAINS 
-        while (DispOptions) {
+        boolean dispOptions = true;
+        int offset = 0;
+        while (dispOptions) {
 
             System.out.println("Mostrant les dades a la taula TREN");
-
-            crudbhr.ReadAllTrains("TREN");
-                
-            if (DispOptions) {
-                System.out.println("Vols fer altra consulta? (S o N): ");
-                String opcioB = Std.readLine();
-        
-                if (opcioB.equalsIgnoreCase("n")){
-                    System.out.println("No, no marxis si us plau!");
-                    DispOptions = false;
-                    break;
-                } 
+            boolean more = crudbhr.ReadAllTrains("TREN", offset);
+            if(more){
+                System.out.println("Vols veure els seguents 10?");
+                if (Std.readLine().matches("[sS]")) {
+                    offset += 10;
+                }
+            }else {
+                System.out.println("No quedan mès registres per llegir");
+                dispOptions = false;
+                offset = 0;
+                break;
             }
         }
     }
@@ -168,12 +168,12 @@ public class GestioDBHR {
     public static void MenuSelectAltres(CRUDHR crudbhr,Connection connection) throws SQLException, NumberFormatException, IOException {
         //Demanar id del train que vols veure
         int opcio = 0;
-
-        while (DispOptions) {
-
+        boolean dispOptions = true;
+        while (dispOptions) {
             System.out.println("Quina consulta vols fer?");
             System.out.println("1. Tren per id");
             System.out.println("2. Tren per lletra del nom");
+            System.out.println("3. Sortir de l'elecció");
 
             System.out.print("Introdueix l'opció tot seguit >> ");
 
@@ -189,6 +189,9 @@ public class GestioDBHR {
                     System.out.println("Introdueix alguna lletra del nom del tren >> ");
                     String letterTrain = Std.readLine();
                     crudbhr.ReadTrainLike("TREN", letterTrain);
+                    break;
+                case 3:
+                    dispOptions = false;
             }
 
         }
