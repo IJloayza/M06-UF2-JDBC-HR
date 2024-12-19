@@ -195,6 +195,54 @@ public class CRUDHR {
         
     }
 
+    public void UpdateTrainId(String TableName, Train train) 
+    throws ConnectException, SQLException {
+
+        String query = "UPDATE "+ TableName +" SET Nombre = ?, Capacitat = ? WHERE id = ?;";
+        
+        try (PreparedStatement prepstat = connection.prepareStatement(query)) {
+
+            prepstat.setString(1, train.getName());
+            prepstat.setInt(2, train.getCapacity());
+            prepstat.setInt(3, train.getTrainId());
+            ResultSet rset = prepstat.executeQuery();
+
+            int colNum = getColumnNames(rset);
+
+            //Si el nombre de columnes és >0 procedim a llegir i mostrar els registres
+            if (colNum > 0) {
+
+                recorrerRegistres(rset,colNum);
+
+            }
+        } catch (SQLException sqle) {
+            System.err.println(sqle.getMessage());
+        }
+    }
+
+    public void DeleteTrainId(String TableName, int id) 
+    throws ConnectException, SQLException {
+
+        String query = "DELETE FROM "+ TableName +" WHERE id = ?;";
+        
+        try (PreparedStatement prepstat = connection.prepareStatement(query)) {
+
+            prepstat.setInt(1, id);
+            ResultSet rset = prepstat.executeQuery();
+
+            int colNum = getColumnNames(rset);
+
+            //Si el nombre de columnes és >0 procedim a llegir i mostrar els registres
+            if (colNum > 0) {
+
+                recorrerRegistres(rset,colNum);
+
+            }
+        } catch (SQLException sqle) {
+            System.err.println(sqle.getMessage());
+        }
+    }
+
     public void recorrerRegistres(ResultSet rs, int ColNum) throws SQLException {
         if (!rs.isBeforeFirst()) {
             System.out.println("El ResultSet está vacío.");

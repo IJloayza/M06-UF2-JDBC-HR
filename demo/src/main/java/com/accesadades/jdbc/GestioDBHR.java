@@ -82,6 +82,15 @@ public class GestioDBHR {
         message = "4. INSERIR NOU REGISTRE";
         printScreen(terminal, message);
 
+        message = "5. MODIFICAR UN REGISTRE";
+        printScreen(terminal, message);
+
+        message = "6. ESBORRAR UN REGISTRE";
+        printScreen(terminal, message);
+
+        message = "7. GENERAR UN XML DELS REGISTRES";
+        printScreen(terminal, message);
+
         message = "9. SORTIR";
         printScreen(terminal, message);
 
@@ -120,7 +129,15 @@ public class GestioDBHR {
             case 4:
                 MenuInsert(crudbhr,connection);
                 break;
-
+            case 5:
+                MenuUpdate(crudbhr, connection);
+                break;
+            case 6:
+                MenuDelete(crudbhr, connection);
+                break;
+            case 7:
+                
+                break;
             case 9:
                 //sortim
                 System.out.println("Adéu!!");
@@ -225,7 +242,7 @@ public class GestioDBHR {
                         dadaValida = false;
                     }
                     
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     System.out.println("Format numèric no vàlid");
                 }
 
@@ -251,6 +268,91 @@ public class GestioDBHR {
 
         }
                             
-        }
+    }
 
+    public static void MenuUpdate(CRUDHR crudbhr,Connection connection) 
+    throws SQLException, NumberFormatException, IOException {
+        boolean updateMore = true;
+        while(updateMore){
+            boolean dadaValida = true;
+
+            System.out.println("Introdueix els detalls del tren a modificar");
+
+            int id = 0;
+
+            while (dadaValida) {
+                System.out.print("Quina és la id (PK) del tren? >> ");
+
+                try {
+
+                    id = Integer.parseInt(Std.readLine());
+
+                    if (id <= 0) {
+                        System.out.println("Format numèric no vàlid");
+
+                    } else {
+                        dadaValida = false;
+                    }
+                    
+                } catch (NumberFormatException e) {
+                    System.out.println("Format numèric no vàlid");
+                }
+            }
+
+            System.out.print("Introdueix el nou nom del tren >> ");
+            String name = Std.readLine();
+
+            System.out.print("Introdueix la nova capacitat del tren >> ");
+            int capacity = Integer.parseInt(Std.readLine());
+
+            dadaValida = true;
+
+            Train train = new Train(id, name, capacity);
+
+            crudbhr.UpdateTrainId("TREN", train);
+            System.out.println("Vols modificar un altre tren?");
+
+            if (!Std.readLine().matches("[sS]")) {
+                updateMore = false;
+            }
+        }
+    }
+
+    public static void MenuDelete(CRUDHR crudbhr,Connection connection) 
+    throws SQLException, NumberFormatException, IOException {
+        boolean deleteMore = true;
+        while(deleteMore){
+            boolean dadaValida = true;
+
+            System.out.println("Introdueix els detalls del tren a eliminar");
+
+            int id = 0;
+
+            while (dadaValida) {
+                System.out.print("Quina és la id (PK) del tren? >> ");
+
+                try {
+
+                    id = Integer.parseInt(Std.readLine());
+
+                    if (id <= 0) {
+                        System.out.println("Format numèric no vàlid");
+
+                    } else {
+                        dadaValida = false;
+                    }
+                    
+                } catch (NumberFormatException e) {
+                    System.out.println("Format numèric no vàlid");
+                }
+            }
+
+            crudbhr.DeleteTrainId("TREN", id);
+            System.out.println("Vols eliminar un altre tren?");
+
+            if (!Std.readLine().matches("[sS]")) {
+                deleteMore = false;
+            }
+        }
+    }
 }
