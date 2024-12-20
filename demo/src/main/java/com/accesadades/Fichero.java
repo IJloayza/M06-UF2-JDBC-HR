@@ -32,7 +32,7 @@ public class Fichero {
                 Element arrel = document.createElement ("tren");
                 arrel.setAttribute("id",id);
                 document.getDocumentElement().appendChild(arrel);
-                CrearElement ("nombre",nom.trim(), arrel, document);
+                CrearElement ("nom",nom.trim(), arrel, document);
                 CrearElement ("capacitat", capacity.trim(), arrel, document);
             }
 
