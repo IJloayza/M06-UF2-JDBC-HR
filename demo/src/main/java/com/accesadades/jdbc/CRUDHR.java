@@ -14,7 +14,6 @@ import java.sql.Statement;
 
 public class CRUDHR {
     private Connection connection;
-
     public CRUDHR(Connection conn){
         connection = conn;
     }
@@ -127,6 +126,17 @@ public class CRUDHR {
         return sigue;
     }
 
+    public ResultSet ReadAllTrains(String TableName) throws ConnectException, SQLException {
+        String query = "SELECT * FROM " + TableName + ";";
+        try (PreparedStatement prep = connection.prepareStatement(query)) {
+            ResultSet rset = prep.executeQuery();
+            return rset;
+        }catch (SQLException sqle) {
+            System.err.println(sqle.getMessage());
+            return null;
+        }
+    }
+
     public void ReadTrainsId(String TableName, int id) 
     throws ConnectException, SQLException {
 
@@ -205,16 +215,8 @@ public class CRUDHR {
             prepstat.setString(1, train.getName());
             prepstat.setInt(2, train.getCapacity());
             prepstat.setInt(3, train.getTrainId());
-            ResultSet rset = prepstat.executeQuery();
-
-            int colNum = getColumnNames(rset);
-
-            //Si el nombre de columnes és >0 procedim a llegir i mostrar els registres
-            if (colNum > 0) {
-
-                recorrerRegistres(rset,colNum);
-
-            }
+            //executeUpdate no retorna res
+            prepstat.executeUpdate();
         } catch (SQLException sqle) {
             System.err.println(sqle.getMessage());
         }
@@ -228,16 +230,8 @@ public class CRUDHR {
         try (PreparedStatement prepstat = connection.prepareStatement(query)) {
 
             prepstat.setInt(1, id);
-            ResultSet rset = prepstat.executeQuery();
 
-            int colNum = getColumnNames(rset);
-
-            //Si el nombre de columnes és >0 procedim a llegir i mostrar els registres
-            if (colNum > 0) {
-
-                recorrerRegistres(rset,colNum);
-
-            }
+            prepstat.executeUpdate();
         } catch (SQLException sqle) {
             System.err.println(sqle.getMessage());
         }
@@ -260,6 +254,22 @@ public class CRUDHR {
             } 
         }
             
+    }
+
+    public int ultimID(String tableName){
+        String query= "SELECT id FROM " + tableName +" ORDER BY id DESC LIMIT 1;";
+        try (PreparedStatement prepstat = connection.prepareStatement(query)) {
+            ResultSet rs = prepstat.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                return id;
+            } else {
+                return 0;
+            }
+        } catch (SQLException sqle) {
+            System.err.println(sqle.getMessage());
+            return 0;
+        }
     }
         
 }

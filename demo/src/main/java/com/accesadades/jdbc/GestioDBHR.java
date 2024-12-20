@@ -6,31 +6,33 @@ import java.io.InputStream;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import com.accesadades.Fichero;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
 
 public class GestioDBHR {
 //Com veurem, aquesta booleana controla si volem sortir de l'aplicació.
     static boolean sortirapp = false;
+    private static final String urlConn = "jdbc:mariadb://localhost:3306";
         
         public static void main(String[] args) {
-
-        // Carregar propietats des de l'arxiu
-        Properties properties = new Properties();
-        try (InputStream input = GestioDBHR.class.getClassLoader().getResourceAsStream("config.properties")) {
-        //try (FileInputStream input = new FileInputStream(configFilePath)) {
-            properties.load(input);
-
-            // Obtenir les credencials com a part del fitxer de propietats
-            String dbUrl = properties.getProperty("db.url");
-            String dbUser = properties.getProperty("db.username");
-            String dbPassword = properties.getProperty("db.password");
-
+        try{
+            System.out.println("Indica l'usuari que utilitzaras en aquesta connexió");
+            String user = Std.readLine();
+            if(user.isBlank()){
+                throw new IllegalArgumentException("S'ha de indicar un usuari per fer una connexió");
+            }
+            System.out.println("Indica la contrasenya que utilitzaras en aquesta connexió");
+            String pass = Std.readLine();
+            if(user.isBlank()){
+                throw new IllegalArgumentException("S'ha de indicar una contrasenya per fer una connexió");
+            }
             // Conectar amb MariaDB
-            try (Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword)) {
-                System.out.println("Conexió exitosa");
+            try (Connection connection = DriverManager.getConnection(urlConn, user, pass)) {
+                System.out.println("Connexió exitosa");
 
                 String File_create_script = "db_scripts/DB_Schema_HR.sql" ;
 
@@ -45,9 +47,9 @@ public class GestioDBHR {
 
             } catch (Exception e) {
                 System.err.println("Error al conectar: " + e.getMessage());
-            }
+            } 
         } catch (Exception e) {
-            System.err.println("Error al carregar fitxer de propietats: " + e.getMessage());
+            System.err.println("Error al crear connexió, dades inválides" + e.getMessage());
         }
     }
 
@@ -96,11 +98,7 @@ public class GestioDBHR {
 
 
         message = "Introdueix l'opcio tot seguit >> ";
-        for (char c : message.toCharArray()) {
-            terminal.writer().print(c);
-            terminal.flush();
-            Thread.sleep(7);
-        }
+        printScreen(terminal, message);
 
         int opcio = Integer.parseInt(Std.readLine());
 
@@ -136,7 +134,7 @@ public class GestioDBHR {
                 MenuDelete(crudbhr, connection);
                 break;
             case 7:
-                
+                MenuXML(crudbhr, connection);
                 break;
             case 9:
                 //sortim
@@ -154,7 +152,7 @@ public class GestioDBHR {
         for (char c : message.toCharArray()) {
             terminal.writer().print(c);
             terminal.flush();
-            Thread.sleep(10);
+            Thread.sleep(7);
         }
         System.out.println();
     }
@@ -172,12 +170,14 @@ public class GestioDBHR {
                 System.out.println("Vols veure els seguents 10?");
                 if (Std.readLine().matches("[sS]")) {
                     offset += 10;
+                } else{
+                    dispOptions = false;
+                    offset = 0;
                 }
             }else {
                 System.out.println("No quedan mès registres per llegir");
                 dispOptions = false;
                 offset = 0;
-                break;
             }
         }
     }
@@ -227,9 +227,9 @@ public class GestioDBHR {
             System.out.println("Introdueix els detalls del nou tren");
 
             int id = 0;
-
+            int lastId = crudbhr.ultimID("TREN");
             while (dadaValida) {
-                System.out.print("Quina és la id (PK) del tren? >> ");
+                System.out.print("Quina és la id (PK) del tren? (últim ID "+ lastId +") >> ");
 
                 try {
 
@@ -354,5 +354,13 @@ public class GestioDBHR {
                 deleteMore = false;
             }
         }
+    }
+
+    public static void MenuXML(CRUDHR crudbhr,Connection connection) 
+    throws SQLException, NumberFormatException, IOException {
+            System.out.println("Creant arxiu XML a /xmls de totes les dades");
+            ResultSet rs = crudbhr.ReadAllTrains("TREN");
+            Fichero.crearXML(rs);
+            System.out.println("Arxiu creat a /xmls");
     }
 }
